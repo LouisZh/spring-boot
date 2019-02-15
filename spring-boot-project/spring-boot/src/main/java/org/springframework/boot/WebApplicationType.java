@@ -60,17 +60,24 @@ public enum WebApplicationType {
 
 	private static final String REACTIVE_APPLICATION_CONTEXT_CLASS = "org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext";
 
+	/**
+	 * 从 classpath 上，判断 Web 应用类型。
+	 * @return
+	 */
 	static WebApplicationType deduceFromClasspath() {
+		// Reactive Web Application
 		if (ClassUtils.isPresent(WEBFLUX_INDICATOR_CLASS, null)
 				&& !ClassUtils.isPresent(WEBMVC_INDICATOR_CLASS, null)
 				&& !ClassUtils.isPresent(JERSEY_INDICATOR_CLASS, null)) {
 			return WebApplicationType.REACTIVE;
 		}
+		// Non-web Application
 		for (String className : SERVLET_INDICATOR_CLASSES) {
 			if (!ClassUtils.isPresent(className, null)) {
 				return WebApplicationType.NONE;
 			}
 		}
+		// Servlet Application; 可以这样判断的原因是，引入 Spring MVC 时，如果是内嵌的 Web 应用，会引入 Servlet 类。
 		return WebApplicationType.SERVLET;
 	}
 

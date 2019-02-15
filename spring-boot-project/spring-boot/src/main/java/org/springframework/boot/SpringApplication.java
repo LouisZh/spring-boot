@@ -193,8 +193,6 @@ public class SpringApplication {
 
 	private static final Log logger = LogFactory.getLog(SpringApplication.class);
 
-	private Set<Class<?>> primarySources;
-
 	private Set<String> sources = new LinkedHashSet<>();
 
 	private Class<?> mainApplicationClass;
@@ -209,7 +207,30 @@ public class SpringApplication {
 
 	private Banner banner;
 
+	/**
+	 * 资源加载器
+	 */
 	private ResourceLoader resourceLoader;
+
+	/**
+	 * 主要的 Java Config 类的数组
+	 */
+	private Set<Class<?>> primarySources;
+
+	/**
+	 * web 应用类型
+	 */
+	private WebApplicationType webApplicationType;
+
+	/**
+	 * ApplicationContextInitializer 数组
+	 */
+	private List<ApplicationContextInitializer<?>> initializers;
+
+	/**
+	 * ApplicationListener 数组
+	 */
+	private List<ApplicationListener<?>> listeners;
 
 	private BeanNameGenerator beanNameGenerator;
 
@@ -217,15 +238,9 @@ public class SpringApplication {
 
 	private Class<? extends ConfigurableApplicationContext> applicationContextClass;
 
-	private WebApplicationType webApplicationType;
-
 	private boolean headless = true;
 
 	private boolean registerShutdownHook = true;
-
-	private List<ApplicationContextInitializer<?>> initializers;
-
-	private List<ApplicationListener<?>> listeners;
 
 	private Map<String, Object> defaultProperties;
 
@@ -265,8 +280,10 @@ public class SpringApplication {
 		Assert.notNull(primarySources, "PrimarySources must not be null");
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
 		this.webApplicationType = WebApplicationType.deduceFromClasspath();
+		// 初始化 initializers属性 (ApplicationContextInitializer 数组)
 		setInitializers((Collection) getSpringFactoriesInstances(
 				ApplicationContextInitializer.class));
+		// 初始化 listeners (ApplicationListener 数组)
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
 		this.mainApplicationClass = deduceMainApplicationClass();
 	}
