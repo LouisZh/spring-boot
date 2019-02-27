@@ -207,6 +207,9 @@ public class SpringApplication {
 
 	private boolean addCommandLineProperties = true;
 
+	/**
+	 * 是否添加 ConversionService 属性
+	 */
 	private boolean addConversionService = true;
 
 	private Banner banner;
@@ -319,41 +322,56 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+		// 创建 StopWatch 对象，并启动。StopWatch 主要用于简单统计 run 启动过程的时长。
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
+  		// 配置 headless 属性
 		configureHeadlessProperty();
+		// 获取SpringApplicationRunListeners数组，并监听
 		SpringApplicationRunListeners listeners = getRunListeners(args);
 		listeners.starting();
 		try {
-			ApplicationArguments applicationArguments = new DefaultApplicationArguments(
-					args);
-			ConfigurableEnvironment environment = prepareEnvironment(listeners,
-					applicationArguments);
+			// 创建 ApplicationArguments对象
+			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+			// 加载属性配置。执行完成后，所有的 environment 的属性都会加载进来，包括 application.properties、application.yml 和外部的属性配置。
+			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			configureIgnoreBeanInfo(environment);
+			// 打印 Spring Banner
 			Banner printedBanner = printBanner(environment);
+			// 创建 Spring 容器
 			context = createApplicationContext();
+			// 异常报告器
 			exceptionReporters = getSpringFactoriesInstances(
 					SpringBootExceptionReporter.class,
 					new Class[] { ConfigurableApplicationContext.class }, context);
-			prepareContext(context, environment, listeners, applicationArguments,
-					printedBanner);
+			//
+			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+			// 初始化 Spring 容器
 			refreshContext(context);
+			// 在 Spring 容器初始化之后做某些配置 （该方法目前是空方法）
 			afterRefresh(context, applicationArguments);
+			// spring 容器启动完成，停止统计时长
 			stopWatch.stop();
+
+			// 输出启动日志
 			if (this.logStartupInfo) {
-				new StartupInfoLogger(this.mainApplicationClass)
-						.logStarted(getApplicationLog(), stopWatch);
+				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), stopWatch);
 			}
+
+			// 通知 SpringApplicationRunListener 的数组，Spring 容器启动完成。
 			listeners.started(context);
+			// 调用 ApplicationRunner 或者 CommandLineRunner 的运行方法
 			callRunners(context, applicationArguments);
 		}
 		catch (Throwable ex) {
+			// 如果发生异常，则进行处理，并抛出 IllegalStateException 异常
 			handleRunFailure(context, ex, exceptionReporters, listeners);
 			throw new IllegalStateException(ex);
 		}
 
+		// 通知 SpringApplicationListener 的数组，Spring 容器运行中。
 		try {
 			listeners.running(context);
 		}
@@ -368,14 +386,19 @@ public class SpringApplication {
 			SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments) {
 		// Create and configure the environment
+		// 创建并配置 ConfigurableEnvironment对象
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
+		// 通知 SpringApplicationRunListener 的数组，环境变量已经准备完成。
 		listeners.environmentPrepared(environment);
+		// 绑定 environment 到 SpringApplication 上
 		bindToSpringApplication(environment);
+		// 如果是非自定义 environment，则根据条件转换
 		if (!this.isCustomEnvironment) {
 			environment = new EnvironmentConverter(getClassLoader())
 					.convertEnvironmentIfNecessary(environment, deduceEnvironmentClass());
 		}
+		// 如果有 attach 到 environment 上的 MutablePropertySources ，则添加到 environment 的 PropertySource 中。
 		ConfigurationPropertySources.attach(environment);
 		return environment;
 	}
@@ -394,7 +417,10 @@ public class SpringApplication {
 	private void prepareContext(ConfigurableApplicationContext context,
 			ConfigurableEnvironment environment, SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments, Banner printedBanner) {
+
+		// 设置 context 的 environment 属性
 		context.setEnvironment(environment);
+		//
 		postProcessApplicationContext(context);
 		applyInitializers(context);
 		listeners.contextPrepared(context);
@@ -436,7 +462,7 @@ public class SpringApplication {
 	}
 
 	private void configureHeadlessProperty() {
-		System.setProperty(SYSTEM_PROPERTY_JAVA_AWT_HEADLESS, System.getProperty(
+ 		System.setProperty(SYSTEM_PROPERTY_JAVA_AWT_HEADLESS, System.getProperty(
 				SYSTEM_PROPERTY_JAVA_AWT_HEADLESS, Boolean.toString(this.headless)));
 	}
 
@@ -490,9 +516,11 @@ public class SpringApplication {
 	}
 
 	private ConfigurableEnvironment getOrCreateEnvironment() {
+		// 如果有，则直接返回
 		if (this.environment != null) {
 			return this.environment;
 		}
+		// 如果没有，根据 webApplicationType 创建对应的 ConfigurableEnvironment
 		switch (this.webApplicationType) {
 		case SERVLET:
 			return new StandardServletEnvironment();
@@ -514,13 +542,11 @@ public class SpringApplication {
 	 * @see #configureProfiles(ConfigurableEnvironment, String[])
 	 * @see #configurePropertySources(ConfigurableEnvironment, String[])
 	 */
-	protected void configureEnvironment(ConfigurableEnvironment environment,
-			String[] args) {
+	protected void configureEnvironment(ConfigurableEnvironment environment, String[] args) {
+		// 添加一个共享的 ConversionService
 		if (this.addConversionService) {
-			ConversionService conversionService = ApplicationConversionService
-					.getSharedInstance();
-			environment.setConversionService(
-					(ConfigurableConversionService) conversionService);
+			ConversionService conversionService = ApplicationConversionService.getSharedInstance();
+			environment.setConversionService((ConfigurableConversionService) conversionService);
 		}
 		configurePropertySources(environment, args);
 		configureProfiles(environment, args);
@@ -634,8 +660,7 @@ public class SpringApplication {
 			}
 			catch (ClassNotFoundException ex) {
 				throw new IllegalStateException(
-						"Unable create a default ApplicationContext, "
-								+ "please specify an ApplicationContextClass",
+						"Unable create a default ApplicationContext, please specify an ApplicationContextClass",
 						ex);
 			}
 		}
@@ -655,17 +680,14 @@ public class SpringApplication {
 		}
 		if (this.resourceLoader != null) {
 			if (context instanceof GenericApplicationContext) {
-				((GenericApplicationContext) context)
-						.setResourceLoader(this.resourceLoader);
+				((GenericApplicationContext) context).setResourceLoader(this.resourceLoader);
 			}
 			if (context instanceof DefaultResourceLoader) {
-				((DefaultResourceLoader) context)
-						.setClassLoader(this.resourceLoader.getClassLoader());
+				((DefaultResourceLoader) context).setClassLoader(this.resourceLoader.getClassLoader());
 			}
 		}
 		if (this.addConversionService) {
-			context.getBeanFactory().setConversionService(
-					ApplicationConversionService.getSharedInstance());
+			context.getBeanFactory().setConversionService(ApplicationConversionService.getSharedInstance());
 		}
 	}
 
@@ -853,9 +875,9 @@ public class SpringApplication {
 	}
 
 	private void handleRunFailure(ConfigurableApplicationContext context,
-			Throwable exception,
-			Collection<SpringBootExceptionReporter> exceptionReporters,
-			SpringApplicationRunListeners listeners) {
+								  Throwable exception,
+								  Collection<SpringBootExceptionReporter> exceptionReporters,
+								  SpringApplicationRunListeners listeners) {
 		try {
 			try {
 				handleExitCode(context, exception);
@@ -908,7 +930,7 @@ public class SpringApplication {
 	}
 
 	private void handleExitCode(ConfigurableApplicationContext context,
-			Throwable exception) {
+								Throwable exception) {
 		int exitCode = getExitCodeFromException(context, exception);
 		if (exitCode != 0) {
 			if (context != null) {
@@ -922,7 +944,7 @@ public class SpringApplication {
 	}
 
 	private int getExitCodeFromException(ConfigurableApplicationContext context,
-			Throwable exception) {
+										 Throwable exception) {
 		int exitCode = getExitCodeFromMappedException(context, exception);
 		if (exitCode == 0) {
 			exitCode = getExitCodeFromExitCodeGeneratorException(exception);
