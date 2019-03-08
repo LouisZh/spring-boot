@@ -358,17 +358,17 @@ public class SpringApplication {
 			Banner printedBanner = printBanner(environment);
 			// 10、创建 Spring 容器
 			context = createApplicationContext();
-			// 异常报告器
+			// 11、异常报告器
 			exceptionReporters = getSpringFactoriesInstances(
 					SpringBootExceptionReporter.class,
 					new Class[] { ConfigurableApplicationContext.class },
 					context);
 
-			// 调用所有初始化类的 initialize 方法
+			// 12、调用所有初始化类的 initialize 方法
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
-			// 初始化 Spring 容器
+			// 13、初始化 Spring 容器
 			refreshContext(context);
-			// 在 Spring 容器初始化之后做某些配置 （该方法目前是空方法）
+			// 14、在 Spring 容器初始化之后做某些配置 （该方法目前是空方法）
 			afterRefresh(context, applicationArguments);
 			// spring 容器启动完成，停止统计时长
 			stopWatch.stop();
@@ -378,9 +378,9 @@ public class SpringApplication {
 				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), stopWatch);
 			}
 
-			// 通知 SpringApplicationRunListener 的数组，Spring 容器启动完成。
+			// 15、通知 SpringApplicationRunListener 的数组，Spring 容器启动完成。
 			listeners.started(context);
-			// 调用 ApplicationRunner 或者 CommandLineRunner 的运行方法
+			// 16、调用 ApplicationRunner 或者 CommandLineRunner 的运行方法
 			callRunners(context, applicationArguments);
 		}
 		catch (Throwable ex) {
@@ -389,7 +389,7 @@ public class SpringApplication {
 			throw new IllegalStateException(ex);
 		}
 
-		// 通知 SpringApplicationListener 的数组，Spring 容器运行中。
+		// 17、通知 SpringApplicationListener 的数组，Spring 容器运行中。
 		try {
 			listeners.running(context);
 		}
