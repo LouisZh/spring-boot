@@ -323,7 +323,7 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-test-support</artifactId>
-			<scope>test</scope>
+			<!--<scope>test</scope>--> <!-- 此处注掉，否则运行时会报包找不到的错误 -->
 		</dependency>
 		<dependency>
 			<groupId>com.google.appengine</groupId>
