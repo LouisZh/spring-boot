@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.web.servlet;
+package org.springframework.boot.configurationsample.lombok;
 
-import org.springframework.web.servlet.DispatcherServlet;
+import lombok.Getter;
+import lombok.Setter;
+
+import org.springframework.boot.configurationsample.ConfigurationProperties;
 
 /**
- * Interface that provides the paths that the {@link DispatcherServlet} in an application
- * context is mapped to.
+ * Deprecated configuration properties.
  *
- * @author Madhura Bhave
- * @since 2.0.2
- * @deprecated since 2.0.4 in favor of {@link DispatcherServletPath} and
- * {@link DispatcherServletRegistrationBean}
+ * @author Stephane Nicoll
  */
+@Getter
+@Setter
+@ConfigurationProperties(prefix = "deprecated")
 @Deprecated
-@FunctionalInterface
-public interface DispatcherServletPathProvider {
+public class LombokDeprecatedProperties {
 
-	String getServletPath();
+	private String name;
+
+	private String description;
 
 }

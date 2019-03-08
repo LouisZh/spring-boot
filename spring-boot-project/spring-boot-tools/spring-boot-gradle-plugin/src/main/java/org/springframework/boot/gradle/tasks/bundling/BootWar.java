@@ -54,8 +54,15 @@ public class BootWar extends War implements BootArchive {
 				(copySpec) -> copySpec.from(
 						(Callable<Iterable<File>>) () -> (this.providedClasspath != null)
 								? this.providedClasspath : Collections.emptyList()));
-		getRootSpec().filesMatching("module-info.class", (details) -> {
-			details.setRelativePath(details.getRelativeSourcePath());
+		getRootSpec().filesMatching("module-info.class",
+				(details) -> details.setRelativePath(details.getRelativeSourcePath()));
+		getRootSpec().eachFile((details) -> {
+			String pathString = details.getRelativePath().getPathString();
+			if ((pathString.startsWith("WEB-INF/lib/")
+					|| pathString.startsWith("WEB-INF/lib-provided/"))
+					&& !this.support.isZip(details.getFile())) {
+				details.exclude();
+			}
 		});
 	}
 

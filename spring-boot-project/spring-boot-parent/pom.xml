@@ -30,7 +30,7 @@
 		<testcontainers.version>1.10.6</testcontainers.version>
 		<testng.version>6.14.3</testng.version>
 		<dependency-management-plugin.version>1.0.6.RELEASE</dependency-management-plugin.version>
-		<spring-doc-resources.version>0.1.0.BUILD-SNAPSHOT</spring-doc-resources.version>
+		<spring-doc-resources.version>0.1.0.RELEASE</spring-doc-resources.version>
 	</properties>
 	<scm>
 		<url>http://github.com/spring-projects/spring-boot</url>
@@ -62,23 +62,9 @@
 				<version>1.3.3</version>
 			</dependency>
 			<dependency>
-				<groupId>com.nhaarman</groupId>
-				<artifactId>mockito-kotlin</artifactId>
-				<version>1.6.0</version>
-				<exclusions>
-					<exclusion>
-						<groupId>org.jetbrains.kotlin</groupId>
-						<artifactId>kotlin-stdlib</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.jetbrains.kotlin</groupId>
-						<artifactId>kotlin-reflect</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.mockito</groupId>
-						<artifactId>mockito-core</artifactId>
-					</exclusion>
-				</exclusions>
+				<groupId>io.mockk</groupId>
+				<artifactId>mockk</artifactId>
+				<version>1.9.1.kotlin12</version>
 			</dependency>
 			<dependency>
 				<groupId>org.sonatype.plexus</groupId>
@@ -291,6 +277,11 @@
 	<build>
 		<pluginManagement>
 			<plugins>
+				<plugin>
+					<groupId>com.googlecode.maven-download-plugin</groupId>
+					<artifactId>download-maven-plugin</artifactId>
+					<version>1.4.1</version>
+				</plugin>
 				<plugin>
 					<groupId>org.jetbrains.kotlin</groupId>
 					<artifactId>kotlin-maven-plugin</artifactId>
@@ -585,6 +576,18 @@
 						</goals>
 						<configuration>
 							<rules>
+								<bannedDependencies>
+									<excludes>
+										<exclude>javax.*:*:*</exclude>
+									</excludes>
+									<includes>
+										<include>javax.batch:*:*</include>
+										<include>javax.cache:*:*</include>
+										<include>javax.inject:*:*</include>
+										<include>javax.money:*:*</include>
+									</includes>
+									<searchTransitive>true</searchTransitive>
+								</bannedDependencies>
 								<requireJavaVersion>
 									<version>[1.8,)</version>
 								</requireJavaVersion>

@@ -57,6 +57,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.StringUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -103,6 +104,7 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 	public void clear() {
 		super.clear();
 		this.loggingSystem.cleanUp();
+		((LoggerContext) StaticLoggerBinder.getSingleton().getLoggerFactory()).stop();
 	}
 
 	@Test
@@ -137,8 +139,9 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 	}
 
 	@Test
-	public void testBasicConfigLocation() {
+	public void defaultConfigConfiguresAConsoleAppender() {
 		this.loggingSystem.beforeInitialize();
+		this.loggingSystem.initialize(this.initializationContext, null, null);
 		assertThat(getConsoleAppender()).isNotNull();
 	}
 
@@ -172,11 +175,11 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 		}
 	}
 
-	@Test(expected = IllegalStateException.class)
+	@Test
 	public void testNonexistentConfigLocation() {
 		this.loggingSystem.beforeInitialize();
-		this.loggingSystem.initialize(this.initializationContext,
-				"classpath:logback-nonexistent.xml", null);
+		assertThatIllegalStateException().isThrownBy(() -> this.loggingSystem.initialize(
+				this.initializationContext, "classpath:logback-nonexistent.xml", null));
 	}
 
 	@Test
@@ -382,9 +385,23 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 	}
 
 	@Test
-	public void testMaxFileSizeProperty() {
+	public void testMaxFileSizePropertyWithLogbackFileSize() {
+		testMaxFileSizeProperty("100 MB", "100 MB");
+	}
+
+	@Test
+	public void testMaxFileSizePropertyWithDataSize() {
+		testMaxFileSizeProperty("15MB", "15 MB");
+	}
+
+	@Test
+	public void testMaxFileSizePropertyWithBytesValue() {
+		testMaxFileSizeProperty(String.valueOf(10 * 1024 * 1024), "10 MB");
+	}
+
+	private void testMaxFileSizeProperty(String sizeValue, String expectedFileSize) {
 		MockEnvironment environment = new MockEnvironment();
-		environment.setProperty("logging.file.max-size", "100MB");
+		environment.setProperty("logging.file.max-size", sizeValue);
 		LoggingInitializationContext loggingInitializationContext = new LoggingInitializationContext(
 				environment);
 		File file = new File(tmpDir(), "logback-test.log");
@@ -393,7 +410,7 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 		this.logger.info("Hello world");
 		assertThat(getLineWithText(file, "Hello world")).contains("INFO");
 		assertThat(ReflectionTestUtils.getField(getRollingPolicy(), "maxFileSize")
-				.toString()).isEqualTo("100 MB");
+				.toString()).isEqualTo(expectedFileSize);
 	}
 
 	@Test
@@ -442,10 +459,23 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 	}
 
 	@Test
-	public void testTotalSizeCapProperty() {
-		String expectedSize = "101 MB";
+	public void testTotalSizeCapPropertyWithLogbackFileSize() {
+		testTotalSizeCapProperty("101 MB", "101 MB");
+	}
+
+	@Test
+	public void testTotalSizeCapPropertyWithDataSize() {
+		testTotalSizeCapProperty("10MB", "10 MB");
+	}
+
+	@Test
+	public void testTotalSizeCapPropertyWithBytesValue() {
+		testTotalSizeCapProperty(String.valueOf(10 * 1024 * 1024), "10 MB");
+	}
+
+	private void testTotalSizeCapProperty(String sizeValue, String expectedFileSize) {
 		MockEnvironment environment = new MockEnvironment();
-		environment.setProperty("logging.file.total-size-cap", expectedSize);
+		environment.setProperty("logging.file.total-size-cap", sizeValue);
 		LoggingInitializationContext loggingInitializationContext = new LoggingInitializationContext(
 				environment);
 		File file = new File(tmpDir(), "logback-test.log");
@@ -454,7 +484,7 @@ public class LogbackLoggingSystemTests extends AbstractLoggingSystemTests {
 		this.logger.info("Hello world");
 		assertThat(getLineWithText(file, "Hello world")).contains("INFO");
 		assertThat(ReflectionTestUtils.getField(getRollingPolicy(), "totalSizeCap")
-				.toString()).isEqualTo(expectedSize);
+				.toString()).isEqualTo(expectedFileSize);
 	}
 
 	@Test

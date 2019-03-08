@@ -38,8 +38,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.GsonHttpMessageConverter;
@@ -269,7 +269,7 @@ public class HttpMessageConvertersAutoConfigurationTests {
 	}
 
 	@Test
-	public void whenReactiveWebApplicationHttpMessageConvertersRestTemplateIsNotConfigured() {
+	public void whenReactiveWebApplicationHttpMessageConvertersIsNotConfigured() {
 		new ReactiveWebApplicationContextRunner()
 				.withConfiguration(AutoConfigurations
 						.of(HttpMessageConvertersAutoConfiguration.class))
@@ -384,7 +384,7 @@ public class HttpMessageConvertersAutoConfigurationTests {
 		@Bean
 		public TypeConstrainedMappingJackson2HttpMessageConverter typeConstrainedConverter() {
 			return new TypeConstrainedMappingJackson2HttpMessageConverter(
-					ResourceSupport.class);
+					RepresentationModel.class);
 		}
 
 	}
