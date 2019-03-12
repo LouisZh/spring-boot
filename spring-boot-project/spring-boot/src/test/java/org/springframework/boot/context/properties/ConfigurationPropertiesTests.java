@@ -41,6 +41,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -805,6 +806,57 @@ public class ConfigurationPropertiesTests {
 		assertThat(x.get(1).getB()).isEqualTo(1);
 	}
 
+	@Test
+	public void loadWhenConfigurationPropertiesInjectsAnotherBeanShouldNotFail() {
+		load(OtherInjectPropertiesConfiguration.class);
+	}
+
+	@Test
+	public void loadWhenBindingToConstructorParametersShouldBind() {
+		MutablePropertySources sources = this.context.getEnvironment()
+				.getPropertySources();
+		Map<String, Object> source = new HashMap<>();
+		source.put("test.foo", "baz");
+		source.put("test.bar", "5");
+		sources.addLast(new MapPropertySource("test", source));
+		load(ConstructorParameterConfiguration.class);
+		ConstructorParameterProperties bean = this.context
+				.getBean(ConstructorParameterProperties.class);
+		assertThat(bean.getFoo()).isEqualTo("baz");
+		assertThat(bean.getBar()).isEqualTo(5);
+	}
+
+	@Test
+	public void loadWhenBindingToConstructorParametersWithDefaultValuesShouldBind() {
+		load(ConstructorParameterConfiguration.class);
+		ConstructorParameterProperties bean = this.context
+				.getBean(ConstructorParameterProperties.class);
+		assertThat(bean.getFoo()).isEqualTo("hello");
+		assertThat(bean.getBar()).isEqualTo(0);
+	}
+
+	@Test
+	public void loadWhenBindingToConstructorParametersShouldValidate() {
+		assertThatExceptionOfType(Exception.class)
+				.isThrownBy(() -> load(ConstructorParameterValidationConfiguration.class))
+				.satisfies((ex) -> {
+					assertThat(ex).hasCauseInstanceOf(BindException.class);
+					assertThat(ex.getCause())
+							.hasCauseExactlyInstanceOf(BindValidationException.class);
+				});
+	}
+
+	@Test
+	public void loadWhenBindingOnBeanWithoutBeanDefinitionShouldBind() {
+		load(BasicConfiguration.class, "name=test");
+		BasicProperties bean = this.context.getBean(BasicProperties.class);
+		assertThat(bean.name).isEqualTo("test");
+		bean.name = "override";
+		this.context.getBean(ConfigurationPropertiesBindingPostProcessor.class)
+				.postProcessBeforeInitialization(bean, "does-not-exist");
+		assertThat(bean.name).isEqualTo("test");
+	}
+
 	private AnnotationConfigApplicationContext load(Class<?> configuration,
 			String... inlinedProperties) {
 		return load(new Class<?>[] { configuration }, inlinedProperties);
@@ -1143,7 +1195,7 @@ public class ConfigurationPropertiesTests {
 	@EnableConfigurationProperties(WithCustomValidatorProperties.class)
 	static class WithCustomValidatorConfiguration {
 
-		@Bean(name = ConfigurationPropertiesBindingPostProcessor.VALIDATOR_BEAN_NAME)
+		@Bean(name = ConfigurationPropertiesBindingPostProcessorRegistrar.VALIDATOR_BEAN_NAME)
 		public CustomPropertiesValidator validator() {
 			return new CustomPropertiesValidator();
 		}
@@ -1154,7 +1206,7 @@ public class ConfigurationPropertiesTests {
 	@EnableConfigurationProperties(WithSetterThatThrowsValidationExceptionProperties.class)
 	static class WithUnsupportedCustomValidatorConfiguration {
 
-		@Bean(name = ConfigurationPropertiesBindingPostProcessor.VALIDATOR_BEAN_NAME)
+		@Bean(name = ConfigurationPropertiesBindingPostProcessorRegistrar.VALIDATOR_BEAN_NAME)
 		public CustomPropertiesValidator validator() {
 			return new CustomPropertiesValidator();
 		}
@@ -1765,6 +1817,76 @@ public class ConfigurationPropertiesTests {
 		public void setAnotherSize(DataSize anotherSize) {
 			this.anotherSize = anotherSize;
 		}
+
+	}
+
+	@ConfigurationProperties(prefix = "test")
+	static class OtherInjectedProperties {
+
+		final DataSizeProperties dataSizeProperties;
+
+		@Autowired
+		OtherInjectedProperties(ObjectProvider<DataSizeProperties> dataSizeProperties) {
+			this.dataSizeProperties = dataSizeProperties.getIfUnique();
+		}
+
+	}
+
+	@Configuration
+	@EnableConfigurationProperties(OtherInjectedProperties.class)
+	static class OtherInjectPropertiesConfiguration {
+
+	}
+
+	@ConfigurationProperties(prefix = "test")
+	@Validated
+	static class ConstructorParameterProperties {
+
+		@NotEmpty
+		private final String foo;
+
+		private final int bar;
+
+		ConstructorParameterProperties(
+				@ConfigurationPropertyDefaultValue("hello") String foo, int bar) {
+			this.foo = foo;
+			this.bar = bar;
+		}
+
+		public String getFoo() {
+			return this.foo;
+		}
+
+		public int getBar() {
+			return this.bar;
+		}
+
+	}
+
+	@ConfigurationProperties(prefix = "test")
+	@Validated
+	static class ConstructorParameterValidatedProperties {
+
+		@NotEmpty
+		private final String foo;
+
+		ConstructorParameterValidatedProperties(String foo) {
+			this.foo = foo;
+		}
+
+		public String getFoo() {
+			return this.foo;
+		}
+
+	}
+
+	@EnableConfigurationProperties(ConstructorParameterProperties.class)
+	static class ConstructorParameterConfiguration {
+
+	}
+
+	@EnableConfigurationProperties(ConstructorParameterValidatedProperties.class)
+	static class ConstructorParameterValidationConfiguration {
 
 	}
 
