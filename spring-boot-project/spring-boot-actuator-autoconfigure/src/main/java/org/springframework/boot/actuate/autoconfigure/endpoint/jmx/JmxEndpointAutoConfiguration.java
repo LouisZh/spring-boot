@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,14 +49,15 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.ObjectUtils;
 
 /**
- * {@link EnableAutoConfiguration Auto-configuration} for JMX {@link Endpoint} support.
+ * {@link EnableAutoConfiguration Auto-configuration} for JMX {@link Endpoint @Endpoint}
+ * support.
  *
  * @author Andy Wilkinson
  * @author Stephane Nicoll
  * @author Phillip Webb
  * @since 2.0.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter(JmxAutoConfiguration.class)
 @EnableConfigurationProperties(JmxEndpointProperties.class)
 @ConditionalOnProperty(prefix = "spring.jmx", name = "enabled", havingValue = "true")

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,6 @@ import org.springframework.boot.web.servlet.server.MockServletWebServerFactory;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -142,54 +141,6 @@ public class AnnotationConfigServletWebServerApplicationContextTests {
 				.getServletContext()).isNotNull();
 	}
 
-	@Test
-	public void registerBean() {
-		this.context = new AnnotationConfigServletWebServerApplicationContext();
-		this.context.register(ExampleServletWebServerApplicationConfiguration.class);
-		this.context.registerBean(TestBean.class);
-		this.context.refresh();
-		assertThat(this.context.getBeanFactory().containsSingleton(
-				"annotationConfigServletWebServerApplicationContextTests.TestBean"))
-						.isTrue();
-		assertThat(this.context.getBean(TestBean.class)).isNotNull();
-	}
-
-	@Test
-	public void registerBeanWithLazy() {
-		this.context = new AnnotationConfigServletWebServerApplicationContext();
-		this.context.register(ExampleServletWebServerApplicationConfiguration.class);
-		this.context.registerBean(TestBean.class, Lazy.class);
-		this.context.refresh();
-		assertThat(this.context.getBeanFactory().containsSingleton(
-				"annotationConfigServletWebServerApplicationContextTests.TestBean"))
-						.isFalse();
-		assertThat(this.context.getBean(TestBean.class)).isNotNull();
-	}
-
-	@Test
-	public void registerBeanWithSupplier() {
-		this.context = new AnnotationConfigServletWebServerApplicationContext();
-		this.context.register(ExampleServletWebServerApplicationConfiguration.class);
-		this.context.registerBean(TestBean.class, TestBean::new);
-		this.context.refresh();
-		assertThat(this.context.getBeanFactory().containsSingleton(
-				"annotationConfigServletWebServerApplicationContextTests.TestBean"))
-						.isTrue();
-		assertThat(this.context.getBean(TestBean.class)).isNotNull();
-	}
-
-	@Test
-	public void registerBeanWithSupplierAndLazy() {
-		this.context = new AnnotationConfigServletWebServerApplicationContext();
-		this.context.register(ExampleServletWebServerApplicationConfiguration.class);
-		this.context.registerBean(TestBean.class, TestBean::new, Lazy.class);
-		this.context.refresh();
-		assertThat(this.context.getBeanFactory().containsSingleton(
-				"annotationConfigServletWebServerApplicationContextTests.TestBean"))
-						.isFalse();
-		assertThat(this.context.getBean(TestBean.class)).isNotNull();
-	}
-
 	private void verifyContext() {
 		MockServletWebServerFactory factory = this.context
 				.getBean(MockServletWebServerFactory.class);
@@ -217,7 +168,7 @@ public class AnnotationConfigServletWebServerApplicationContextTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableWebMvc
 	public static class ServletContextAwareEmbeddedConfiguration
 			implements ServletContextAware {
@@ -245,7 +196,7 @@ public class AnnotationConfigServletWebServerApplicationContextTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	public static class WebServerConfiguration {
 
 		@Bean
@@ -255,7 +206,7 @@ public class AnnotationConfigServletWebServerApplicationContextTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableWebMvc
 	public static class ServletContextAwareConfiguration implements ServletContextAware {
 
@@ -274,10 +225,6 @@ public class AnnotationConfigServletWebServerApplicationContextTests {
 		public ServletContext getServletContext() {
 			return this.servletContext;
 		}
-
-	}
-
-	private static class TestBean {
 
 	}
 

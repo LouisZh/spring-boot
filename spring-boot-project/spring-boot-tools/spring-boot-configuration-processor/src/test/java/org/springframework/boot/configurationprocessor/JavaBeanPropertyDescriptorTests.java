@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +24,6 @@ import javax.lang.model.element.VariableElement;
 
 import org.junit.Test;
 
-import org.springframework.boot.configurationsample.simple.DeprecatedProperties;
 import org.springframework.boot.configurationsample.simple.DeprecatedSingleProperty;
 import org.springframework.boot.configurationsample.simple.SimpleCollectionProperties;
 import org.springframework.boot.configurationsample.simple.SimpleProperties;
@@ -196,14 +195,15 @@ public class JavaBeanPropertyDescriptorTests extends PropertyDescriptorTests {
 	@Test
 	@SuppressWarnings("deprecation")
 	public void javaBeanDeprecatedPropertyOnClass() throws IOException {
-		process(DeprecatedProperties.class, (roundEnv, metadataEnv) -> {
-			TypeElement ownerElement = roundEnv
-					.getRootElement(DeprecatedProperties.class);
-			JavaBeanPropertyDescriptor property = createPropertyDescriptor(ownerElement,
-					"name");
-			assertItemMetadata(metadataEnv, property).isProperty()
-					.isDeprecatedWithNoInformation();
-		});
+		process(org.springframework.boot.configurationsample.simple.DeprecatedProperties.class,
+				(roundEnv, metadataEnv) -> {
+					TypeElement ownerElement = roundEnv.getRootElement(
+							org.springframework.boot.configurationsample.simple.DeprecatedProperties.class);
+					JavaBeanPropertyDescriptor property = createPropertyDescriptor(
+							ownerElement, "name");
+					assertItemMetadata(metadataEnv, property).isProperty()
+							.isDeprecatedWithNoInformation();
+				});
 	}
 
 	@Test

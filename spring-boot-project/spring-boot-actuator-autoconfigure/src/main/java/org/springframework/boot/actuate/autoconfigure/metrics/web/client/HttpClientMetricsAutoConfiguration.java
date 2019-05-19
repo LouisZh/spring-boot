@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,7 +42,7 @@ import org.springframework.core.annotation.Order;
  * @author Raheela Aslam
  * @since 2.1.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter({ MetricsAutoConfiguration.class,
 		SimpleMetricsExportAutoConfiguration.class, RestTemplateAutoConfiguration.class })
 @ConditionalOnClass(MeterRegistry.class)
@@ -53,7 +53,7 @@ public class HttpClientMetricsAutoConfiguration {
 	@Bean
 	@Order(0)
 	public MeterFilter metricsHttpClientUriTagFilter(MetricsProperties properties) {
-		String metricName = properties.getWeb().getClient().getRequestsMetricName();
+		String metricName = properties.getWeb().getClient().getRequest().getMetricName();
 		MeterFilter denyFilter = new OnlyOnceLoggingDenyMeterFilter(() -> String
 				.format("Reached the maximum number of URI tags for '%s'. Are you using "
 						+ "'uriVariables'?", metricName));

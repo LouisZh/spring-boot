@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,8 +24,8 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 
 /**
- * {@link TypeExcludeFilter} to exclude classes annotated with {@link TestComponent} as
- * well as inner-classes of tests.
+ * {@link TypeExcludeFilter} to exclude classes annotated with
+ * {@link TestComponent @TestComponent} as well as inner-classes of tests.
  *
  * @author Phillip Webb
  * @author Andy Wilkinson

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,9 +23,9 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.jndi.JndiPropertiesHidingClassLoader;
 import org.springframework.boot.autoconfigure.jndi.TestableInitialContextFactory;
@@ -52,21 +52,21 @@ public class JndiDataSourceAutoConfigurationTests {
 
 	private AnnotationConfigApplicationContext context;
 
-	@Before
+	@BeforeEach
 	public void setupJndi() {
 		this.initialContextFactory = System.getProperty(Context.INITIAL_CONTEXT_FACTORY);
 		System.setProperty(Context.INITIAL_CONTEXT_FACTORY,
 				TestableInitialContextFactory.class.getName());
 	}
 
-	@Before
+	@BeforeEach
 	public void setupThreadContextClassLoader() {
 		this.threadContextClassLoader = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader(
 				new JndiPropertiesHidingClassLoader(getClass().getClassLoader()));
 	}
 
-	@After
+	@AfterEach
 	public void close() {
 		TestableInitialContextFactory.clearAll();
 		if (this.initialContextFactory != null) {
@@ -162,7 +162,7 @@ public class JndiDataSourceAutoConfigurationTests {
 		TestableInitialContextFactory.bind(name, dataSource);
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class MBeanExporterConfiguration {
 
 		@Bean
@@ -172,7 +172,7 @@ public class JndiDataSourceAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class AnotherMBeanExporterConfiguration {
 
 		@Bean

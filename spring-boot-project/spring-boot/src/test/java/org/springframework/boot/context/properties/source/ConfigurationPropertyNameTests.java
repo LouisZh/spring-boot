@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -621,6 +621,16 @@ public class ConfigurationPropertyNameTests {
 				.adapt("example.mymap.ALPH!", '.');
 		ConfigurationPropertyName n2 = ConfigurationPropertyName
 				.adapt("example.mymap.ALPHA!BRAVO", '.');
+		assertThat(n1).isNotEqualTo(n2);
+	}
+
+	@Test
+	public void equalsWhenNameStartsTheSameUsingDashedCompare() {
+		// gh-16855
+		ConfigurationPropertyName n1 = ConfigurationPropertyName
+				.of("management.metrics.web.server.auto-time-request");
+		ConfigurationPropertyName n2 = ConfigurationPropertyName
+				.of("management.metrics.web.server.auto-time-requests");
 		assertThat(n1).isNotEqualTo(n2);
 	}
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,6 +47,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.context.properties.bind.BindException;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.boot.context.properties.bind.validation.BindValidationException;
 import org.springframework.boot.convert.DataSizeUnit;
 import org.springframework.boot.testsupport.rule.OutputCapture;
@@ -808,7 +809,10 @@ public class ConfigurationPropertiesTests {
 
 	@Test
 	public void loadWhenConfigurationPropertiesInjectsAnotherBeanShouldNotFail() {
-		load(OtherInjectPropertiesConfiguration.class);
+		assertThatExceptionOfType(ConfigurationPropertiesBindException.class)
+				.isThrownBy(() -> load(OtherInjectPropertiesConfiguration.class))
+				.withMessageContaining(OtherInjectedProperties.class.getName())
+				.withMessageContaining("Failed to bind properties under 'test'");
 	}
 
 	@Test
@@ -887,37 +891,37 @@ public class ConfigurationPropertiesTests {
 		this.context = new AnnotationConfigApplicationContext();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(BasicProperties.class)
 	static class BasicConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(NestedProperties.class)
 	static class NestedConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(IgnoreUnknownFieldsFalseProperties.class)
 	static class IgnoreUnknownFieldsFalseConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(PrefixProperties.class)
 	static class PrefixConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(ValidatedJsr303Properties.class)
 	static class ValidatedJsr303Configuration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class ValidatedOnBeanJsr303Configuration {
 
@@ -929,37 +933,37 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(NonValidatedJsr303Properties.class)
 	static class NonValidatedJsr303Configuration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(AnnotationOnBaseClassProperties.class)
 	static class AnnotationOnBaseClassConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(WithoutAndAnnotationConfiguration.class)
 	static class WithoutAndAnnotationConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(WithoutAnnotationValueProperties.class)
 	static class WithoutAnnotationValueConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@ImportResource("org/springframework/boot/context/properties/testProperties.xml")
 	static class DefaultsInXmlConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class DefaultsInJavaConfiguration {
 
 		@Bean
@@ -971,7 +975,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class PrefixPropertiesDeclaredAsBeanConfiguration {
 
@@ -982,20 +986,20 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(PrefixProperties.class)
 	static class PrefixPropertiesDeclaredAsAnnotationValueConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties({ PrefixProperties.class,
 			AnotherPrefixProperties.class })
 	static class MultiplePrefixPropertiesDeclaredAsAnnotationValueConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class PrefixedPropertiesReplacedOnBeanMethodConfiguration {
 
@@ -1007,7 +1011,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class ValidatedImplementationConfiguration {
 
@@ -1018,7 +1022,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	@ConfigurationProperties
 	static class WithPostConstructConfiguration {
@@ -1043,7 +1047,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(WithPropertyPlaceholderValueProperties.class)
 	static class WithPropertyPlaceholderValueConfiguration {
 
@@ -1054,7 +1058,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(SimplePrefixedProperties.class)
 	static class WithPropertyPlaceholderWithLocalPropertiesValueConfiguration {
 
@@ -1069,7 +1073,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class WithFactoryBeanConfiguration {
 
@@ -1077,7 +1081,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class MultiplePropertySourcesPlaceholderConfigurerConfiguration {
 
@@ -1093,7 +1097,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class PrototypePropertiesConfiguration {
 
@@ -1137,7 +1141,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class ConverterConfiguration {
 
 		@Bean
@@ -1148,7 +1152,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class NonQualifiedConverterConfiguration {
 
 		@Bean
@@ -1158,7 +1162,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class GenericConverterConfiguration {
 
 		@Bean
@@ -1169,7 +1173,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class NonQualifiedGenericConverterConfiguration {
 
 		@Bean
@@ -1179,7 +1183,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class GenericConfiguration {
 
@@ -1191,7 +1195,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(WithCustomValidatorProperties.class)
 	static class WithCustomValidatorConfiguration {
 
@@ -1202,7 +1206,7 @@ public class ConfigurationPropertiesTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(WithSetterThatThrowsValidationExceptionProperties.class)
 	static class WithUnsupportedCustomValidatorConfiguration {
 
@@ -1825,14 +1829,13 @@ public class ConfigurationPropertiesTests {
 
 		final DataSizeProperties dataSizeProperties;
 
-		@Autowired
 		OtherInjectedProperties(ObjectProvider<DataSizeProperties> dataSizeProperties) {
 			this.dataSizeProperties = dataSizeProperties.getIfUnique();
 		}
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(OtherInjectedProperties.class)
 	static class OtherInjectPropertiesConfiguration {
 
@@ -1847,8 +1850,7 @@ public class ConfigurationPropertiesTests {
 
 		private final int bar;
 
-		ConstructorParameterProperties(
-				@ConfigurationPropertyDefaultValue("hello") String foo, int bar) {
+		ConstructorParameterProperties(@DefaultValue("hello") String foo, int bar) {
 			this.foo = foo;
 			this.bar = bar;
 		}

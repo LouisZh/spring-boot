@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,7 +26,7 @@ import javax.validation.ValidatorFactory;
 
 import org.assertj.core.api.Assertions;
 import org.joda.time.DateTime;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
@@ -413,23 +413,25 @@ public class WebFluxAutoConfigurationTests {
 
 	@Test
 	public void cachePeriod() {
+		Assertions.setExtractBareNamePropertyMethods(false);
 		this.contextRunner.withPropertyValues("spring.resources.cache.period:5")
 				.run((context) -> {
 					Map<PathPattern, Object> handlerMap = getHandlerMap(context);
 					assertThat(handlerMap).hasSize(2);
 					for (Object handler : handlerMap.values()) {
 						if (handler instanceof ResourceWebHandler) {
-							Assertions.setExtractBareNamePropertyMethods(false);
 							assertThat(((ResourceWebHandler) handler).getCacheControl())
 									.isEqualToComparingFieldByField(
 											CacheControl.maxAge(5, TimeUnit.SECONDS));
 						}
 					}
 				});
+		Assertions.setExtractBareNamePropertyMethods(true);
 	}
 
 	@Test
 	public void cacheControl() {
+		Assertions.setExtractBareNamePropertyMethods(false);
 		this.contextRunner
 				.withPropertyValues("spring.resources.cache.cachecontrol.max-age:5",
 						"spring.resources.cache.cachecontrol.proxy-revalidate:true")
@@ -438,7 +440,6 @@ public class WebFluxAutoConfigurationTests {
 					assertThat(handlerMap).hasSize(2);
 					for (Object handler : handlerMap.values()) {
 						if (handler instanceof ResourceWebHandler) {
-							Assertions.setExtractBareNamePropertyMethods(false);
 							assertThat(((ResourceWebHandler) handler).getCacheControl())
 									.isEqualToComparingFieldByField(
 											CacheControl.maxAge(5, TimeUnit.SECONDS)
@@ -446,6 +447,7 @@ public class WebFluxAutoConfigurationTests {
 						}
 					}
 				});
+		Assertions.setExtractBareNamePropertyMethods(true);
 	}
 
 	private Map<PathPattern, Object> getHandlerMap(ApplicationContext context) {
@@ -457,7 +459,7 @@ public class WebFluxAutoConfigurationTests {
 		return Collections.emptyMap();
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class CustomArgumentResolvers {
 
 		@Bean
@@ -472,7 +474,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class CustomCodecCustomizers {
 
 		@Bean
@@ -482,7 +484,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class ViewResolvers {
 
 		@Bean
@@ -498,7 +500,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class Config {
 
 		@Bean
@@ -508,7 +510,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class CustomHttpHandler {
 
 		@Bean
@@ -518,7 +520,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class ValidatorWebFluxConfigurer implements WebFluxConfigurer {
 
 		private final Validator validator = mock(Validator.class);
@@ -530,7 +532,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class ValidatorJsr303WebFluxConfigurer implements WebFluxConfigurer {
 
 		private final LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
@@ -542,7 +544,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomJsr303Validator {
 
 		@Bean
@@ -552,7 +554,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomSpringValidator {
 
 		@Bean
@@ -562,7 +564,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomHiddenHttpMethodFilter {
 
 		@Bean
@@ -572,7 +574,7 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomRequestMappingHandlerAdapter {
 
 		@Bean
@@ -594,14 +596,14 @@ public class WebFluxAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@Import({ WebFluxAutoConfigurationTests.CustomRequestMappingHandlerMapping.class,
 			WebFluxAutoConfigurationTests.CustomRequestMappingHandlerAdapter.class })
 	static class MultipleWebFluxRegistrations {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class CustomRequestMappingHandlerMapping {
 
 		@Bean

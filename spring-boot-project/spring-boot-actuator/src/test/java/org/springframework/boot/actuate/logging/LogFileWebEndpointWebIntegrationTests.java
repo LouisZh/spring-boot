@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -69,6 +69,7 @@ public class LogFileWebEndpointWebIntegrationTests {
 		TestPropertyValues.of("logging.file.name:" + this.logFile.getAbsolutePath())
 				.applyTo(context);
 		client.get().uri("/actuator/logfile").exchange().expectStatus().isOk()
+				.expectHeader().contentType("text/plain; charset=UTF-8")
 				.expectBody(String.class).isEqualTo("--TEST--");
 	}
 
@@ -77,10 +78,12 @@ public class LogFileWebEndpointWebIntegrationTests {
 		TestPropertyValues.of("logging.file:" + this.logFile.getAbsolutePath())
 				.applyTo(context);
 		client.get().uri("/actuator/logfile").accept(MediaType.TEXT_PLAIN).exchange()
-				.expectStatus().isOk().expectBody(String.class).isEqualTo("--TEST--");
+				.expectStatus().isOk().expectHeader()
+				.contentType("text/plain; charset=UTF-8").expectBody(String.class)
+				.isEqualTo("--TEST--");
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	static class TestConfiguration {
 
 		@Bean

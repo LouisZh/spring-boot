@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.boot.autoconfigure.kafka;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -34,7 +35,7 @@ import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -47,6 +48,7 @@ import org.springframework.kafka.config.AbstractKafkaListenerContainerFactory;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
+import org.springframework.kafka.config.StreamsBuilderFactoryBean;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
@@ -54,13 +56,13 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.AfterRollbackProcessor;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.ContainerProperties.AckMode;
+import org.springframework.kafka.listener.SeekToCurrentBatchErrorHandler;
 import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
 import org.springframework.kafka.security.jaas.KafkaJaasLoginModuleInitializer;
 import org.springframework.kafka.support.converter.BatchMessageConverter;
 import org.springframework.kafka.support.converter.BatchMessagingMessageConverter;
 import org.springframework.kafka.support.converter.MessagingMessageConverter;
 import org.springframework.kafka.support.converter.RecordMessageConverter;
-import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.kafka.transaction.ChainedKafkaTransactionManager;
 import org.springframework.kafka.transaction.KafkaAwareTransactionManager;
 import org.springframework.kafka.transaction.KafkaTransactionManager;
@@ -70,6 +72,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link KafkaAutoConfiguration}.
@@ -281,11 +285,12 @@ public class KafkaAutoConfigurationTests {
 									.isEmpty();
 					assertThat(configs.get("foo.bar.baz")).isEqualTo("qux.fiz.buz");
 					assertThat(configs.get("fiz.buz")).isEqualTo("fix.fox");
-					assertThat(KafkaTestUtils.getPropertyValue(admin,
-							"fatalIfBrokerNotAvailable", Boolean.class)).isTrue();
+					assertThat(admin).hasFieldOrPropertyWithValue(
+							"fatalIfBrokerNotAvailable", true);
 				});
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void streamsProperties() {
 		this.contextRunner.withUserConfiguration(EnableKafkaStreamsConfiguration.class)
@@ -311,15 +316,16 @@ public class KafkaAutoConfigurationTests {
 					Properties configs = context.getBean(
 							KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME,
 							KafkaStreamsConfiguration.class).asProperties();
-					assertThat(configs.get(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG))
-							.isEqualTo("localhost:9092, localhost:9093");
+					assertThat((List<String>) configs
+							.get(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG))
+									.containsExactly("localhost:9092", "localhost:9093");
 					assertThat(
 							configs.get(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG))
-									.isEqualTo("1024");
+									.isEqualTo(1024);
 					assertThat(configs.get(StreamsConfig.CLIENT_ID_CONFIG))
 							.isEqualTo("override");
 					assertThat(configs.get(StreamsConfig.REPLICATION_FACTOR_CONFIG))
-							.isEqualTo("2");
+							.isEqualTo(2);
 					assertThat(configs.get(StreamsConfig.STATE_DIR_CONFIG))
 							.isEqualTo("/tmp/state");
 					assertThat(configs.get(SslConfigs.SSL_KEY_PASSWORD_CONFIG))
@@ -351,6 +357,7 @@ public class KafkaAutoConfigurationTests {
 				});
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void streamsApplicationIdUsesMainApplicationNameByDefault() {
 		this.contextRunner.withUserConfiguration(EnableKafkaStreamsConfiguration.class)
@@ -361,8 +368,9 @@ public class KafkaAutoConfigurationTests {
 					Properties configs = context.getBean(
 							KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME,
 							KafkaStreamsConfiguration.class).asProperties();
-					assertThat(configs.get(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG))
-							.isEqualTo("localhost:9092, localhost:9093");
+					assertThat((List<String>) configs
+							.get(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG))
+									.containsExactly("localhost:9092", "localhost:9093");
 					assertThat(configs.get(StreamsConfig.APPLICATION_ID_CONFIG))
 							.isEqualTo("my-test-app");
 				});
@@ -384,6 +392,31 @@ public class KafkaAutoConfigurationTests {
 							.isEqualTo("localhost:9094, localhost:9095");
 					assertThat(configs.get(StreamsConfig.APPLICATION_ID_CONFIG))
 							.isEqualTo("test-id");
+				});
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void streamsWithSeveralStreamsBuilderFactoryBeans() {
+		this.contextRunner
+				.withUserConfiguration(EnableKafkaStreamsConfiguration.class,
+						TestStreamsBuilderFactoryBeanConfiguration.class)
+				.withPropertyValues("spring.application.name=my-test-app",
+						"spring.kafka.bootstrap-servers=localhost:9092,localhost:9093",
+						"spring.kafka.streams.auto-startup=false")
+				.run((context) -> {
+					Properties configs = context.getBean(
+							KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME,
+							KafkaStreamsConfiguration.class).asProperties();
+					assertThat((List<String>) configs
+							.get(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG))
+									.containsExactly("localhost:9092", "localhost:9093");
+					verify(context.getBean("&firstStreamsBuilderFactoryBean",
+							StreamsBuilderFactoryBean.class), never())
+									.setAutoStartup(false);
+					verify(context.getBean("&secondStreamsBuilderFactoryBean",
+							StreamsBuilderFactoryBean.class), never())
+									.setAutoStartup(false);
 				});
 	}
 
@@ -550,8 +583,39 @@ public class KafkaAutoConfigurationTests {
 				.run((context) -> {
 					ConcurrentKafkaListenerContainerFactory<?, ?> factory = context
 							.getBean(ConcurrentKafkaListenerContainerFactory.class);
-					assertThat(KafkaTestUtils.getPropertyValue(factory, "errorHandler"))
-							.isSameAs(context.getBean("errorHandler"));
+					assertThat(factory).hasFieldOrPropertyWithValue("errorHandler",
+							context.getBean("errorHandler"));
+				});
+	}
+
+	@Test
+	public void concurrentKafkaListenerContainerFactoryInBatchModeShouldUseBatchErrorHandler() {
+		this.contextRunner.withUserConfiguration(BatchErrorHandlerConfiguration.class)
+				.withPropertyValues("spring.kafka.listener.type=batch").run((context) -> {
+					ConcurrentKafkaListenerContainerFactory<?, ?> factory = context
+							.getBean(ConcurrentKafkaListenerContainerFactory.class);
+					assertThat(factory).hasFieldOrPropertyWithValue("errorHandler",
+							context.getBean("batchErrorHandler"));
+				});
+	}
+
+	@Test
+	public void concurrentKafkaListenerContainerFactoryInBatchModeWhenBatchErrorHandlerNotAvailableShouldBeNull() {
+		this.contextRunner.withPropertyValues("spring.kafka.listener.type=batch")
+				.run((context) -> {
+					ConcurrentKafkaListenerContainerFactory<?, ?> factory = context
+							.getBean(ConcurrentKafkaListenerContainerFactory.class);
+					assertThat(factory).hasFieldOrPropertyWithValue("errorHandler", null);
+				});
+	}
+
+	@Test
+	public void concurrentKafkaListenerContainerFactoryInBatchModeAndSimpleErrorHandlerShouldBeNull() {
+		this.contextRunner.withPropertyValues("spring.kafka.listener.type=batch")
+				.withUserConfiguration(ErrorHandlerConfiguration.class).run((context) -> {
+					ConcurrentKafkaListenerContainerFactory<?, ?> factory = context
+							.getBean(ConcurrentKafkaListenerContainerFactory.class);
+					assertThat(factory).hasFieldOrPropertyWithValue("errorHandler", null);
 				});
 	}
 
@@ -604,7 +668,7 @@ public class KafkaAutoConfigurationTests {
 		});
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class MessageConverterConfiguration {
 
 		@Bean
@@ -614,7 +678,7 @@ public class KafkaAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class BatchMessageConverterConfiguration {
 
 		@Bean
@@ -624,7 +688,7 @@ public class KafkaAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class ErrorHandlerConfiguration {
 
 		@Bean
@@ -634,7 +698,17 @@ public class KafkaAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
+	protected static class BatchErrorHandlerConfiguration {
+
+		@Bean
+		public SeekToCurrentBatchErrorHandler batchErrorHandler() {
+			return new SeekToCurrentBatchErrorHandler();
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
 	protected static class TransactionManagerConfiguration {
 
 		@Bean
@@ -647,7 +721,7 @@ public class KafkaAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class AfterRollbackProcessorConfiguration {
 
 		@Bean
@@ -659,13 +733,13 @@ public class KafkaAutoConfigurationTests {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	@EnableKafkaStreams
 	protected static class EnableKafkaStreamsConfiguration {
 
 	}
 
-	@Configuration
+	@Configuration(proxyBeanMethods = false)
 	protected static class TestKafkaStreamsConfiguration {
 
 		@Bean(name = KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME)
@@ -676,6 +750,21 @@ public class KafkaAutoConfigurationTests {
 			streamsProperties.put(StreamsConfig.APPLICATION_ID_CONFIG, "test-id");
 
 			return new KafkaStreamsConfiguration(streamsProperties);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	protected static class TestStreamsBuilderFactoryBeanConfiguration {
+
+		@Bean
+		public StreamsBuilderFactoryBean firstStreamsBuilderFactoryBean() {
+			return mock(StreamsBuilderFactoryBean.class);
+		}
+
+		@Bean
+		public StreamsBuilderFactoryBean secondStreamsBuilderFactoryBean() {
+			return mock(StreamsBuilderFactoryBean.class);
 		}
 
 	}
